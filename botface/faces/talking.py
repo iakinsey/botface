@@ -2,22 +2,28 @@ from concurrent.futures import ThreadPoolExecutor
 from math import floor
 from random import randint
 
-from pydub import AudioSegment
-from pydub.playback import play
-from pygame import mixer, Color, Rect
-from pygame.draw import circle
+from pygame import Color, Rect
 from pygame.image import load
+from pygame.mixer import Sound
 from pygame.time import get_ticks
 from pygame.transform import flip, scale
 
 from .colorbg import ColorBg
+from .audiomixin import AudioMixin
 
 
 executor = ThreadPoolExecutor(max_workers=1)
 
 
-class TalkingFace(ColorBg):
-    def __init__(self, surface):
+class TalkingFace(AudioMixin, ColorBg):
+    sounds = [
+        Sound('assets/talking2.mp3'),
+        Sound('assets/talking3.mp3'),
+        Sound('assets/talking4.mp3'),
+        Sound('assets/talking5.mp3')
+    ]
+
+    def __init__(self, surface, channel):
         super().__init__(surface)
 
         width = surface.get_width()
@@ -36,7 +42,6 @@ class TalkingFace(ColorBg):
 
         mouth_y = height - eye_y
 
-        self.voice = AudioSegment.from_wav('assets/morusque_full.wav')
         self.eye_left = scale(eye, (eye_w, eye_h))
         self.width = width
         self.eye_x = eye_x
@@ -46,27 +51,17 @@ class TalkingFace(ColorBg):
         self.mouth_y = mouth_y
         self.played = False
         self.duration = randint(2, 5)
+        self.sound = self.sounds[self.duration - 2]
+        self.channel = channel
 
     def render(self, event):
-        self.play_voice()
+        self.play_sound()
         self.render_background()
         self.render_eyes()
         self.render_mouth()
 
     def get_duration(self):
         return self.duration
-
-    def play_voice(self):
-        if self.played:
-            return
-
-        self.played = True
-        voice_duration = self.voice.duration_seconds
-        start = randint(0, floor(voice_duration - self.duration))
-        end = start + self.duration
-        stream = self.voice[start * 1000:end * 1000].fade_in(100).fade_out(100)
-
-        executor.submit(play, stream)
 
     def render_eyes(self):
         self.surface.blit(self.eye_left, (self.eye_x-self.eye_r, self.eye_y))

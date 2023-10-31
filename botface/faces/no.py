@@ -1,22 +1,20 @@
-from concurrent.futures import ThreadPoolExecutor
-
-from pydub import AudioSegment
-from pydub.playback import play
 from pygame import Color, Rect
 from pygame.image import load
+from pygame.mixer import Sound
 from pygame.transform import scale
 
 
-executor = ThreadPoolExecutor(max_workers=1)
+from .audiomixin import AudioMixin
 
 
-class NoFace:
-    def __init__(self, surface):
+class NoFace(AudioMixin):
+    sound = Sound('assets/no.wav')
+
+    def __init__(self, surface, channel):
         self.surface = surface
         self.w = surface.get_width()
         self.h = surface.get_height()
         self.duration = 5
-        self.voice = AudioSegment.from_wav('assets/no.wav')
         self.played = False
 
         no = load('assets/no.png')
@@ -27,9 +25,10 @@ class NoFace:
 
         self.no = scale(no, (no_w, no_h))
         self.no_rect = self.no.get_rect(center=(self.w / 2, self.h / 2))
+        self.channel = channel
 
     def render(self, event):
-        self.play_voice()
+        self.play_sound()
         self.render_background()
         self.render_no()
 
@@ -38,11 +37,3 @@ class NoFace:
 
     def render_no(self):
         self.surface.blit(self.no, self.no_rect)
-
-    def play_voice(self):
-        if self.played:
-            return
-
-        self.played = True
-
-        executor.submit(play, self.voice)

@@ -1,22 +1,20 @@
-from concurrent.futures import ThreadPoolExecutor
-
-from pydub import AudioSegment
-from pydub.playback import play
 from pygame import Color, Rect
 from pygame.image import load
+from pygame.mixer import Sound
 from pygame.transform import scale
 
 
-executor = ThreadPoolExecutor(max_workers=1)
+from .audiomixin import AudioMixin
 
 
-class YesFace:
-    def __init__(self, surface):
+class YesFace(AudioMixin):
+    sound = Sound('assets/yes.wav')
+
+    def __init__(self, surface, channel):
         self.surface = surface
         self.w = surface.get_width()
         self.h = surface.get_height()
         self.duration = 5
-        self.voice = AudioSegment.from_wav('assets/yes.wav')
         self.played = False
 
         yes = load('assets/yes.png')
@@ -27,9 +25,10 @@ class YesFace:
 
         self.yes = scale(yes, (yes_w, yes_h))
         self.yes_rect = self.yes.get_rect(center=(self.w / 2, self.h / 2))
+        self.channel = channel
 
     def render(self, event):
-        self.play_voice()
+        self.play_sound()
         self.render_background()
         self.render_yes()
 
@@ -38,11 +37,3 @@ class YesFace:
 
     def render_yes(self):
         self.surface.blit(self.yes, self.yes_rect)
-
-    def play_voice(self):
-        if self.played:
-            return
-
-        self.played = True
-
-        executor.submit(play, self.voice)

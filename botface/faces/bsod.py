@@ -41,7 +41,7 @@ class BSODFace:
         self.w = surface.get_width()
         self.h = surface.get_height()
         self.duration = 10
-        self.font_size = 24
+        self.font_size = int(self.h * 0.02)
         font = Font("assets/lucida_console.ttf", self.font_size)
         self.text = [font.render(text.encode(), False, FONT) for text in TEXT]
 
